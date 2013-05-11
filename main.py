@@ -4,10 +4,10 @@ import pygame
 
 pygame.init()
 
-size = (width, height) = (640, 480)
+size = (width, height) = (640, 640)
 offset = 10
 
-sprite_size = (sprite_width, sprite_height) = (31, 23)
+sprite_size = (sprite_width, sprite_height) = (31, 31)
 
 black = (0, 0, 0)
 white = (255, 255, 255)
@@ -24,7 +24,10 @@ main_rect = pygame.Rect(offset, offset, width - 2 * offset, height - 2 * offset)
 pygame.draw.rect(background, white, main_rect)
 
 # Load images
+deg = 1
 irobot = pygame.image.load("irobot.bmp")
+irobot.set_colorkey(white)
+irobot_orig = irobot
 irobot_rect = irobot.get_rect().move(width / 2, height / 2)
 
 wall = pygame.Rect(offset, offset, sprite_width, sprite_height)
@@ -50,10 +53,17 @@ for i in range(sprite_height, height - sprite_height * 2,  sprite_height):
 
 started = False
 
+clock = pygame.time.Clock()
+
 while True:
+	clock.tick(10)
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			sys.exit()
+		if event.type == pygame.KEYDOWN:
+			# Start the work
+			if event.unicode == " ":
+				started = not started
 		if event.type == pygame.MOUSEBUTTONDOWN:
 			# Draw walls
 			if event.button == 1 and not started:
@@ -82,7 +92,13 @@ while True:
 				if new_irobot_rect.collidelist(walls) == -1:
 					irobot_rect = new_irobot_rect
 				else:
-					print("error")
+					print("Error while move irobot")
+	if started:
+		irobot_rect.move_ip(1, 1)
+		irobot = pygame.transform.rotate(irobot_orig, deg)
+		irobot_rect[2:3] = irobot.get_rect()[2:3]
+		deg += 1
+
 
 	screen.blit(background, (0, 0))
 	screen.blit(irobot, irobot_rect)
