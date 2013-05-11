@@ -62,7 +62,7 @@ for i in range(sprite_height, height - sprite_height * 2,  sprite_height):
 	pygame.draw.rect(background, grey, new_wall)
 
 started = False
-
+fps = 60
 clock = pygame.time.Clock()
 
 
@@ -79,14 +79,14 @@ def irobot_rotate(deg):
 
 def can_move_forward():
 	global irobot_rect, walls, deg, speedx, speedy
-	irobot_rect_new = irobot_rect.move(speedx * 2.2, speedy * 2.2)
+	irobot_rect_new = irobot_rect.move(speedx * 2.5, speedy * 2.5)
 	if irobot_rect_new.collidelist(walls) == -1:
 		return True
 	return False
 
 
 while True:
-	clock.tick(60)
+	clock.tick(fps)
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			sys.exit()
@@ -94,6 +94,9 @@ while True:
 			# Start the work
 			if event.unicode == " ":
 				started = not started
+			if event.unicode in ["1", "2", "3", "4", "5"]:
+				fps = int(event.unicode) * 60
+
 		if event.type == pygame.MOUSEBUTTONDOWN:
 			# Draw walls
 			if event.button == 1 and not started:
@@ -126,25 +129,22 @@ while True:
 
 	if started:
 		if state == STATE_ROTATE:
-			if deg != to_deg:
-				if deg < to_deg:
-					deg += 1
-				else:
-					deg -= 1
+			if deg <= to_deg:
+				deg += 2
 				irobot_rotate(deg)
 			else:
 				speedx = math.trunc(math.cos(deg * math.pi / 180) * 5)
 				speedy = -math.trunc(math.sin(deg * math.pi / 180) * 5)
-				print(speedx, speedy)
 				state = STATE_MOVE
 
 		if state == STATE_MOVE:
 			if can_move_forward():
-				pygame.draw.line(background, red, irobot_rect[0:2], irobot_rect.move(speedx, speedy)[0:2])
+				start_pos = irobot_rect.center
 				irobot_rect.move_ip(speedx, speedy)
+				pygame.draw.line(background, red, start_pos, irobot_rect.center, 1)
 			else:
-				deg_offset = randint(15, 35)
-				to_deg = (deg + deg_offset) % 360
+				deg_offset = randint(10, 125)
+				to_deg = (deg + deg_offset)
 				state = STATE_ROTATE
 
 	screen.blit(background, (0, 0))
