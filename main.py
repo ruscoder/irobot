@@ -15,19 +15,17 @@ offset = 10
 sprite_size = (sprite_width, sprite_height) = (31, 31)
 
 black = (0, 0, 0)
-red = (255, 0, 0)
+line_color = (255, 255, 255)
 white = (255, 255, 255)
-grey = (128, 128, 128)
+wall_color = (138, 0, 90)
 
 screen = pygame.display.set_mode(size)
-pygame.display.set_caption("iRobot visual")
+pygame.display.set_caption("iRobot visual. Author: Laletin Vadim KI10-01")
 
-background = pygame.Surface(screen.get_size())
-background = background.convert()
-background.fill(black)
+background = pygame.image.load("laminat.png").convert()
 
 main_rect = pygame.Rect(offset, offset, width - 2 * offset, height - 2 * offset)
-pygame.draw.rect(background, white, main_rect)
+#pygame.draw.rect(background, white, main_rect)
 
 # Load images
 deg = 0
@@ -35,10 +33,10 @@ to_deg = deg
 speedx = 2
 speedy = 0
 state = STATE_MOVE
-irobot = pygame.image.load("irobot.bmp")
-irobot.set_colorkey(white)
+irobot = pygame.image.load("irobot.png").convert_alpha()
 irobot_orig = irobot
-irobot_rect = irobot.get_rect().move(width / 2, height / 2)
+irobot_rect = irobot.get_rect()
+irobot_rect.move_ip((width - irobot_rect[2]) / 2, (height - irobot_rect[3]) / 2)
 
 wall = pygame.Rect(offset, offset, sprite_width, sprite_height)
 walls = []
@@ -47,19 +45,19 @@ walls = []
 for i in range(0, width - sprite_width,  sprite_width):
 	new_wall = wall.move(i, 0)
 	walls.append(new_wall)
-	pygame.draw.rect(background, grey, new_wall)
+	pygame.draw.rect(background, wall_color, new_wall)
 
 	new_wall = wall.move(i, height - sprite_height - offset * 2)
 	walls.append(new_wall)
-	pygame.draw.rect(background, grey, new_wall)
+	pygame.draw.rect(background, wall_color, new_wall)
 for i in range(sprite_height, height - sprite_height * 2,  sprite_height):
 	new_wall = wall.move(0, i)
 	walls.append(new_wall)
-	pygame.draw.rect(background, grey, new_wall)
+	pygame.draw.rect(background, wall_color, new_wall)
 
 	new_wall = wall.move(width - sprite_width - offset * 2, i)
 	walls.append(new_wall)
-	pygame.draw.rect(background, grey, new_wall)
+	pygame.draw.rect(background, wall_color, new_wall)
 
 started = False
 fps = 60
@@ -85,6 +83,11 @@ def can_move_forward():
 	return False
 
 
+font = pygame.font.Font(None, 20)
+text = font.render("Mouse: left - Wall, right - God mode. KB: 1-5 - Speed, space - Start/Stop", 1, white)
+textpos = text.get_rect(centerx=background.get_width() / 2, centery = height - 26)
+background.blit(text, textpos)
+
 while True:
 	clock.tick(fps)
 	for event in pygame.event.get():
@@ -109,7 +112,7 @@ while True:
 					# Add walll to list
 					walls.append(new_wall)
 					# Draw wall
-					pygame.draw.rect(background, grey, new_wall)
+					pygame.draw.rect(background, wall_color, new_wall)
 				else:
 					print("Error while adding new wall")
 
@@ -141,7 +144,7 @@ while True:
 			if can_move_forward():
 				start_pos = irobot_rect.center
 				irobot_rect.move_ip(speedx, speedy)
-				pygame.draw.line(background, red, start_pos, irobot_rect.center, 1)
+				pygame.draw.line(background, line_color, start_pos, irobot_rect.center, 1)
 			else:
 				deg_offset = randint(10, 125)
 				to_deg = (deg + deg_offset)
@@ -149,6 +152,10 @@ while True:
 
 	screen.blit(background, (0, 0))
 	screen.blit(irobot, irobot_rect)
+
+	text = font.render("FPS: %d" % fps, 1, white)
+	textpos = text.get_rect(centerx=background.get_width() / 2, centery = 26)
+	screen.blit(text, textpos)
 	pygame.display.flip()
 
 
