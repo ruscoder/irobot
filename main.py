@@ -1,6 +1,7 @@
 #!/usr/bin/python2.7
 import sys
 import pygame
+import math
 from random import randint
 
 pygame.init()
@@ -14,6 +15,7 @@ offset = 10
 sprite_size = (sprite_width, sprite_height) = (31, 31)
 
 black = (0, 0, 0)
+red = (255, 0, 0)
 white = (255, 255, 255)
 grey = (128, 128, 128)
 
@@ -29,9 +31,9 @@ pygame.draw.rect(background, white, main_rect)
 
 # Load images
 deg = 0
-to_deg = 0
-speedx = 0
-speedy = -1
+to_deg = deg
+speedx = 2
+speedy = 0
 state = STATE_MOVE
 irobot = pygame.image.load("irobot.bmp")
 irobot.set_colorkey(white)
@@ -73,6 +75,14 @@ def irobot_rotate(deg):
 	irobot_rect = irobot.get_rect()
 	# Restore center
 	irobot_rect.center = old_center
+
+
+def can_move_forward():
+	global irobot_rect, walls, deg, speedx, speedy
+	irobot_rect_new = irobot_rect.move(speedx * 2.2, speedy * 2.2)
+	if irobot_rect_new.collidelist(walls) == -1:
+		return True
+	return False
 
 
 while True:
@@ -123,14 +133,18 @@ while True:
 					deg -= 1
 				irobot_rotate(deg)
 			else:
+				speedx = math.trunc(math.cos(deg * math.pi / 180) * 5)
+				speedy = -math.trunc(math.sin(deg * math.pi / 180) * 5)
+				print(speedx, speedy)
 				state = STATE_MOVE
 
 		if state == STATE_MOVE:
-			irobot_rect_new = irobot_rect.move(speedx, speedy)
-			if irobot_rect_new.collidelist(walls) == -1:
-				irobot_rect = irobot_rect_new
+			if can_move_forward():
+				pygame.draw.line(background, red, irobot_rect[0:2], irobot_rect.move(speedx, speedy)[0:2])
+				irobot_rect.move_ip(speedx, speedy)
 			else:
-				to_deg = (deg + randint(40, 90)) % 360
+				deg_offset = randint(15, 35)
+				to_deg = (deg + deg_offset) % 360
 				state = STATE_ROTATE
 
 	screen.blit(background, (0, 0))
