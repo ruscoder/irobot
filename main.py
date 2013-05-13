@@ -17,7 +17,7 @@ sprite_size = (sprite_width, sprite_height) = (31, 31)
 black = (0, 0, 0)
 line_color = (255, 255, 255)
 white = (255, 255, 255)
-wall_color = (138, 0, 90)
+wall_color = (138, 250, 30)
 
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("iRobot visual. Author: Laletin Vadim KI10-01")
@@ -84,7 +84,7 @@ def can_move_forward():
 
 
 font = pygame.font.Font(None, 20)
-text = font.render("Mouse: left - Wall, right - God mode. KB: 1-5 - Speed, space - Start/Stop", 1, white)
+text = font.render("Mouse: left - Wall, right - God mode. KB: 1-5 - Speed, space - Start/Stop", 1, black)
 textpos = text.get_rect(centerx=background.get_width() / 2, centery = height - 26)
 background.blit(text, textpos)
 
@@ -121,10 +121,7 @@ while True:
 				mouse_pos = pygame.mouse.get_pos()
 				posx = mouse_pos[0] - irobot_rect[0] - irobot_rect[2] / 2
 				posy = mouse_pos[1] - irobot_rect[1] - irobot_rect[3] / 2
-				new_irobot_rect = irobot_rect.move(
-					posx,
-					posy
-				)
+				new_irobot_rect = irobot_rect.move(posx, posy)
 				if new_irobot_rect.collidelist(walls) == -1:
 					irobot_rect = new_irobot_rect
 				else:
@@ -153,10 +150,7 @@ while True:
 	screen.blit(background, (0, 0))
 	screen.blit(irobot, irobot_rect)
 
-	text = font.render("FPS: %d" % fps, 1, white)
+	text = font.render("FPS: %d" % fps, 1, black)
 	textpos = text.get_rect(centerx=background.get_width() / 2, centery = 26)
 	screen.blit(text, textpos)
 	pygame.display.flip()
-
-
-
