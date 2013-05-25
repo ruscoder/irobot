@@ -28,18 +28,10 @@ main_rect = pygame.Rect(offset, offset, width - 2 * offset, height - 2 * offset)
 #pygame.draw.rect(background, white, main_rect)
 
 # Load images
-deg = 0
-to_deg = deg
-speedx = 2
-speedy = 0
 state = STATE_MOVE
-irobot = pygame.image.load("irobot.png").convert_alpha()
-irobot_orig = irobot
-irobot_rect = irobot.get_rect()
-irobot_rect.move_ip((width - irobot_rect[2]) / 2, (height - irobot_rect[3]) / 2)
 
 wall = pygame.Rect(offset, offset, sprite_width, sprite_height)
-walls = []
+walls = pygame.sprite.Group
 
 # Make walls around
 for i in range(0, width - sprite_width,  sprite_width):
@@ -63,24 +55,40 @@ started = False
 fps = 60
 clock = pygame.time.Clock()
 
+class Robot(pygame.sprite.Sprite):
+	def __init__(self, walls):
+		self.walls = walls
+		self.irobot = pygame.image.load("irobot.png").convert_alpha()
+		self.irobot_orig = self.irobot
+		self.rect = self.irobot.get_rect()
 
-def irobot_rotate(deg):
-	global irobot, irobot_rect
-	# Save center
-	old_center = irobot_rect.center
-	# Rotate
-	irobot = pygame.transform.rotate(irobot_orig, deg)
-	irobot_rect = irobot.get_rect()
-	# Restore center
-	irobot_rect.center = old_center
+		self.to_deg = self.deg = 0
+
+		self.speedx = 2
+		self.speedy = 0
+
+		surface = pygame.display.get_surface()
+
+		self.rect.move_ip(
+			(surface.get_width() - self.irobot.get_width()) / 2,
+			(surface.get_height() - self.irobot.get_height()) / 2
+		)
+
+	def rotate(self, deg):
+		# Save center
+		old_center = self.rect.center
+		# Rotate
+		self.irobot = pygame.transform.rotate(self.irobot_orig, deg)
+		self.rect = self.irobot.get_rect()
+		# Restore center
+		self.rect.center = old_center
 
 
-def can_move_forward():
-	global irobot_rect, walls, deg, speedx, speedy
-	irobot_rect_new = irobot_rect.move(speedx * 2.5, speedy * 2.5)
-	if irobot_rect_new.collidelist(walls) == -1:
-		return True
-	return False
+	def can_move_forward(self):
+		new_rect = self.rect.move(self.speedx * 2.5, self.speedy * 2.5)
+		if new_rect.collidelist(self.walls) == -1:
+			return True
+		return False
 
 
 font = pygame.font.Font(None, 20)
