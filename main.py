@@ -1,106 +1,59 @@
 #!/usr/bin/python2.7
 import sys
 import pygame
-import math
 from random import randint
+from robot import Robot
+from wall import Wall
+from constant import *
 
+
+# Main
 pygame.init()
 
-STATE_MOVE = 0
-STATE_ROTATE = 1
-
-size = (width, height) = (640, 640)
-offset = 10
-
-sprite_size = (sprite_width, sprite_height) = (31, 31)
-
-black = (0, 0, 0)
-line_color = (255, 255, 255)
-white = (255, 255, 255)
-wall_color = (138, 250, 30)
-
-screen = pygame.display.set_mode(size)
+screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("iRobot visual. Author: Laletin Vadim KI10-01")
 
 background = pygame.image.load("laminat.png").convert()
 
-main_rect = pygame.Rect(offset, offset, width - 2 * offset, height - 2 * offset)
-#pygame.draw.rect(background, white, main_rect)
-
-# Load images
-state = STATE_MOVE
-
-wall = pygame.Rect(offset, offset, sprite_width, sprite_height)
-walls = pygame.sprite.Group
+walls = pygame.sprite.Group()
+irobot = Robot(screen, walls)
 
 # Make walls around
-for i in range(0, width - sprite_width,  sprite_width):
-	new_wall = wall.move(i, 0)
-	walls.append(new_wall)
-	pygame.draw.rect(background, wall_color, new_wall)
+for i in range(0, WIDTH - SPRITE_WIDTH, SPRITE_WIDTH):
+	up_wall = Wall(i, 0)
+	up_wall.render(background)
 
-	new_wall = wall.move(i, height - sprite_height - offset * 2)
-	walls.append(new_wall)
-	pygame.draw.rect(background, wall_color, new_wall)
-for i in range(sprite_height, height - sprite_height * 2,  sprite_height):
-	new_wall = wall.move(0, i)
-	walls.append(new_wall)
-	pygame.draw.rect(background, wall_color, new_wall)
+	down_wall = Wall(i, HEIGHT - SPRITE_HEIGHT - OFFSET * 2)
+	down_wall.render(background)
 
-	new_wall = wall.move(width - sprite_width - offset * 2, i)
-	walls.append(new_wall)
-	pygame.draw.rect(background, wall_color, new_wall)
+	walls.add(up_wall, down_wall)
+
+for i in range(SPRITE_HEIGHT, HEIGHT - SPRITE_HEIGHT * 2, SPRITE_HEIGHT):
+	left_wall = Wall(0, i)
+	left_wall.render(background)
+
+	right_wall = Wall(WIDTH - SPRITE_WIDTH - OFFSET * 2, i)
+	right_wall.render(background)
+
+	walls.add(left_wall, right_wall)
 
 started = False
 fps = 60
 clock = pygame.time.Clock()
-
-class Robot(pygame.sprite.Sprite):
-	def __init__(self, walls):
-		self.walls = walls
-		self.irobot = pygame.image.load("irobot.png").convert_alpha()
-		self.irobot_orig = self.irobot
-		self.rect = self.irobot.get_rect()
-
-		self.to_deg = self.deg = 0
-
-		self.speedx = 2
-		self.speedy = 0
-
-		surface = pygame.display.get_surface()
-
-		self.rect.move_ip(
-			(surface.get_width() - self.irobot.get_width()) / 2,
-			(surface.get_height() - self.irobot.get_height()) / 2
-		)
-
-	def rotate(self, deg):
-		# Save center
-		old_center = self.rect.center
-		# Rotate
-		self.irobot = pygame.transform.rotate(self.irobot_orig, deg)
-		self.rect = self.irobot.get_rect()
-		# Restore center
-		self.rect.center = old_center
-
-
-	def can_move_forward(self):
-		new_rect = self.rect.move(self.speedx * 2.5, self.speedy * 2.5)
-		if new_rect.collidelist(self.walls) == -1:
-			return True
-		return False
-
+state = STATE_MOVE
 
 font = pygame.font.Font(None, 20)
-text = font.render("Mouse: left - Wall, right - God mode. KB: 1-5 - Speed, space - Start/Stop", 1, black)
-textpos = text.get_rect(centerx=background.get_width() / 2, centery = height - 26)
+text = font.render("Mouse: left - Wall. Right - God mode. KB: 1-5 - Speed, space - Start/Stop", 1, COLOR_BLACK)
+textpos = text.get_rect(centerx=background.get_width() / 2, centery = HEIGHT - 26)
 background.blit(text, textpos)
+
 
 while True:
 	clock.tick(fps)
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			sys.exit()
+
 		if event.type == pygame.KEYDOWN:
 			# Start the work
 			if event.unicode == " ":
@@ -112,53 +65,51 @@ while True:
 			# Draw walls
 			if event.button == 1 and not started:
 				mouse_pos = pygame.mouse.get_pos()
-				new_wall = wall.move(
-					mouse_pos[0] - (mouse_pos[0] % sprite_width),
-					mouse_pos[1] - (mouse_pos[1] % sprite_height)
+				new_wall = Wall(
+					mouse_pos[0] - (mouse_pos[0] % SPRITE_WIDTH),
+					mouse_pos[1] - (mouse_pos[1] % SPRITE_HEIGHT)
 				)
-				if not irobot_rect.colliderect(new_wall):
-					# Add walll to list
-					walls.append(new_wall)
-					# Draw wall
-					pygame.draw.rect(background, wall_color, new_wall)
+
+				if pygame.sprite.collide_mask(new_wall, irobot) == None:
+					new_wall.render(background)
+					walls.add(new_wall)
 				else:
 					print("Error while adding new wall")
 
 			# Move irobot
 			if event.button == 3 and not started:
-				mouse_pos = pygame.mouse.get_pos()
-				posx = mouse_pos[0] - irobot_rect[0] - irobot_rect[2] / 2
-				posy = mouse_pos[1] - irobot_rect[1] - irobot_rect[3] / 2
-				new_irobot_rect = irobot_rect.move(posx, posy)
-				if new_irobot_rect.collidelist(walls) == -1:
-					irobot_rect = new_irobot_rect
-				else:
-					print("Error while move irobot")
+					mouse_pos = pygame.mouse.get_pos()
+					posx = mouse_pos[0] - irobot.rect[0] - irobot.rect[2] / 2
+					posy = mouse_pos[1] - irobot.rect[1] - irobot.rect[3] / 2
+					old_rect = irobot.rect
+					irobot.rect = irobot.rect.move(posx, posy)
+					if pygame.sprite.spritecollideany(irobot, walls, pygame.sprite.collide_mask):
+						irobot.rect = old_rect
+						print("Error while move irobot")
+
 
 	if started:
 		if state == STATE_ROTATE:
-			if deg <= to_deg:
-				deg += 2
-				irobot_rotate(deg)
+			if irobot.deg <= irobot.to_deg:
+				irobot.rotate(2)
 			else:
-				speedx = math.trunc(math.cos(deg * math.pi / 180) * 5)
-				speedy = -math.trunc(math.sin(deg * math.pi / 180) * 5)
+				irobot.compute_speed()
 				state = STATE_MOVE
 
 		if state == STATE_MOVE:
-			if can_move_forward():
-				start_pos = irobot_rect.center
-				irobot_rect.move_ip(speedx, speedy)
-				pygame.draw.line(background, line_color, start_pos, irobot_rect.center, 1)
+			if irobot.can_move_forward():
+				start_pos = irobot.rect.center
+				irobot.move_forward()
+				pygame.draw.line(background, COLOR_LINE, start_pos, irobot.rect.center, 1)
 			else:
-				deg_offset = randint(10, 125)
-				to_deg = (deg + deg_offset)
+				irobot.to_deg = (irobot.deg + randint(10,125))
 				state = STATE_ROTATE
 
 	screen.blit(background, (0, 0))
-	screen.blit(irobot, irobot_rect)
+	irobot.render(screen)
 
-	text = font.render("FPS: %d" % fps, 1, black)
+	text = font.render("FPS: %d" % clock.get_fps(), 1, COLOR_BLACK)
 	textpos = text.get_rect(centerx=background.get_width() / 2, centery = 26)
 	screen.blit(text, textpos)
+
 	pygame.display.flip()
